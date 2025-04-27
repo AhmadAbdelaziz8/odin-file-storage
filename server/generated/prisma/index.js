@@ -165,11 +165,12 @@ const config = {
     "db"
   ],
   "activeProvider": "postgresql",
+  "postinstall": false,
   "inlineDatasources": {
     "db": {
       "url": {
         "fromEnvVar": "DATABASE_URL",
-        "value": "postgresql://postgres:fortnite@localhost:5432/mini_drive_db?schema=public"
+        "value": null
       }
     }
   },
