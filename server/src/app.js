@@ -8,6 +8,7 @@ import dotenv from "dotenv";
 // Import configurations and routes
 import configurePassport from "./config/passport.js";
 import authRoutes from "./routes/auth.route.js";
+import folderRoutes from "./routes/folders.js";
 
 dotenv.config(); // Load .env variables
 
@@ -20,7 +21,7 @@ app.use(express.urlencoded({ extended: true }));
 // Session Configuration
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || "default_secret_key", // Use env variable!
+    secret: process.env.SESSION_SECRET || "default_secret_key",
     resave: false,
     saveUninitialized: false,
     cookie: {
@@ -38,11 +39,20 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Configure Passport Strategies (call the function we exported)
 configurePassport(passport);
 
-app.use("/api/auth", authRoutes); // Mount the authentication routes
+app.use((req, res, next) => {
+  console.log("--- Request Check ---");
+  console.log("Method:", req.method);
+  console.log("URL:", req.originalUrl);
+  console.log("Headers:", req.headers);
+  console.log("Body Parsed?:", req.body);
+  console.log("--- End Check ---");
+  next();
+});
 
+app.use("/api/auth", authRoutes);
+app.use("api/folders", folderRoutes);
 app.get("/api/hello", (req, res) => {
   res.send("API is running!");
 });

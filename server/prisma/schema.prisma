@@ -1,8 +1,4 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// schema.prisma
 
 generator client {
   provider = "prisma-client-js"
@@ -15,22 +11,60 @@ datasource db {
 }
 
 model User {
-  id  String @id @default(uuid())
-  username String @unique
-  password String 
+  id        String   @id @default(uuid())
+  username  String   @unique
+  password  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  sessions Session[]
+  sessions  Session[]
+  files     File[]
+  folders   Folder[] // Relation to Folder model
+}
+
+model Folder {
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relation to User
+  userId    String   // Foreign key matching User.id type
+  owner     User     @relation(fields: [userId], references: [id], onDelete: Cascade) // If user is deleted, delete their folders
+
+  // Relation to Files contained in this folder
+  files     File[]
+
+  @@unique([userId, name]) // A user cannot have two folders with the same name at the same level
+  @@index([userId])
+}
+
+model File {
+  id             Int      @id @default(autoincrement())
+  filename       String
+  storedFilename String
+  path           String
+  mimetype       String
+  size           Int
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relation to User
+  userId         String
+  owner          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Relation to Folder (Nullable)
+  folderId       Int?     // <<< ADDED: Nullable foreign key (Int matches Folder.id)
+  folder         Folder?  @relation(fields: [folderId], references: [id], onDelete: SetNull) // <<< ADDED: If folder is deleted, set file's folderId to null (orphan the file)
+
+  @@index([userId])
+  @@index([folderId]) // <<< ADDED: Index for faster lookups by folder
 }
 
 model Session {
-  id String @id 
-  sid String @unique
-
-  data String
+  id        String   @id
+  sid       String   @unique
+  data      String
   expiresAt DateTime
-  userId String?
+  userId    String?
   user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-
-
 }
