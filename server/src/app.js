@@ -39,7 +39,7 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-configurePassport(passport);
+configurePassport(); // Fixed: removed unnecessary passport parameter
 
 app.use((req, res, next) => {
   console.log("--- Request Check ---");
@@ -52,7 +52,7 @@ app.use((req, res, next) => {
 });
 
 app.use("/api/auth", authRoutes);
-app.use("api/folders", folderRoutes);
+app.use("/api/folders", folderRoutes);
 app.get("/api/hello", (req, res) => {
   res.send("API is running!");
 });

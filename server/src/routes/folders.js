@@ -1,7 +1,7 @@
 import express from "express";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "../../generated/prisma/index.js";
 
-const Prisma = new PrismaClient();
+const prisma = new PrismaClient();
 const router = express.Router();
 
 function ensureAuthenticated(req, res, next) {
@@ -13,18 +13,38 @@ function ensureAuthenticated(req, res, next) {
 }
 router.use(ensureAuthenticated);
 
-//   upload folder
+// Get all folders for the current user
+router.get("/", async (req, res, next) => {
+  const userId = req.user.id;
+  
+  try {
+    const folders = await prisma.folder.findMany({
+      where: {
+        userId: userId,
+      },
+      orderBy: {
+        name: "asc",
+      },
+    });
+    
+    res.status(200).json(folders);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Create folder
 router.post("/", async (req, res, next) => {
   const { name } = req.body;
-  const { userId } = req.user.id;
+  const userId = req.user.id;  // Fixed: userId extraction
 
-  if (!name || !typeof name !== "string" || name.length === 0) {
-    return res.status(400).json({ message: "folder must hava a valid name" });
+  if (!name || typeof name !== "string" || name.length === 0) {  // Fixed: type check
+    return res.status(400).json({ message: "folder must have a valid name" });
   }
 
   const trimmedName = name.trim();
   try {
-    const existingFolder = await Prisma.Folder.FindFirst({
+    const existingFolder = await prisma.folder.findFirst({  // Fixed: Prisma method name
       where: {
         name: trimmedName,
         userId: userId,
@@ -35,7 +55,7 @@ router.post("/", async (req, res, next) => {
       return res.status(409).json({ message: "folder already exists" });
     }
 
-    const folder = await Prisma.Folder.create({
+    const folder = await prisma.folder.create({
       data: {
         name: trimmedName,
         userId: userId,
@@ -51,35 +71,18 @@ router.post("/", async (req, res, next) => {
   }
 });
 
-//   get all folders
-router.get("/", async (req, res) => {
-  const userId = req.user.id;
-
-  try {
-    const folders = await Prisma.Folder.findMany({
-      where: {
-        userId: userId,
-      },
-    });
-    res.status(200).json(folders);
-  } catch (error) {
-    console.error("Error fetching folders:", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-});
-
-// get specific folder
-router.get(":/folderId", async (req, res) => {
+// Get specific folder
+router.get("/:folderId", async (req, res, next) => {  // Fixed: route parameter syntax
   const userId = req.user.id;
   const { folderId } = req.params;
-  const FolderIdInt = parseInt(folderId, 10);
+  const folderIdInt = parseInt(folderId, 10);  // Fixed: variable name
 
   if (isNaN(FolderIdInt)) {
     return res.status(400).json({ message: "Invalid folder ID format." });
   }
 
   try {
-    const folder = await Prisma.folder.findUnique({
+    const folder = await prisma.folder.findUnique({  // Fixed: Prisma client variable name
       where: {
         id: FolderIdInt,
         userId: userId,
