@@ -9,6 +9,7 @@ import dotenv from "dotenv";
 import configurePassport from "./config/passport.js";
 import authRoutes from "./routes/auth.route.js";
 import folderRoutes from "./routes/folders.js";
+import filesRoutes from "./routes/files.js";
 
 dotenv.config(); // Load .env variables
 
@@ -53,9 +54,7 @@ app.use((req, res, next) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/folders", folderRoutes);
-app.get("/api/hello", (req, res) => {
-  res.send("API is running!");
-});
+app.use("/api/files", filesRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
